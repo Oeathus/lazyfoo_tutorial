@@ -25,6 +25,9 @@ SDL_Renderer* gRenderer = NULL;
 LTexture gTexture = {NULL, 0, 0};
 LTexture gTextureBackground = {NULL, 0, 0};
 
+SDL_Rect gSpriteClips[4];
+LTexture gSpriteSheetTexture = {NULL, 0, 0};
+
 bool init();
 
 bool loadMedia();
@@ -35,7 +38,7 @@ SDL_Texture* loadTexture(const char* path);
 
 bool loadLTextureFromFile(LTexture* texture, const char* path);
 
-void renderLTexture(LTexture* texture, int x, int y);
+void renderLTexture(LTexture* texture, int x, int y, SDL_Rect* clip);
 
 void destroyLTexture(LTexture* texture);
 
