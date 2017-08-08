@@ -36,37 +36,27 @@ bool init() {
 bool loadMedia() {
     bool success = true;
 
-    if (loadLTextureFromFile(&gSpriteSheetTexture, "resources/dots.png")) {
-        gSpriteClips[0].x = 0;
-        gSpriteClips[0].y = 0;
-        gSpriteClips[0].w = 100;
-        gSpriteClips[0].h = 100;
+    gModulatedTexture.gRenderer = gRenderer;
+    gBackgroundTexture.gRenderer = gRenderer;
 
-        gSpriteClips[1].x = 100;
-        gSpriteClips[1].y = 0;
-        gSpriteClips[1].w = 100;
-        gSpriteClips[1].h = 100;
-
-        gSpriteClips[2].x = 0;
-        gSpriteClips[2].y = 100;
-        gSpriteClips[2].w = 100;
-        gSpriteClips[2].h = 100;
-
-        gSpriteClips[3].x = 100;
-        gSpriteClips[3].y = 100;
-        gSpriteClips[3].w = 100;
-        gSpriteClips[3].h = 100;
+    if (LTexture_loadFromFile(&gModulatedTexture, "resources/fadeout.png")) {
+        LTexture_setBlendMode(&gModulatedTexture, SDL_BLENDMODE_BLEND);
     } else {
         success = false;
-        fprintf(stderr, "loadMedia() Failed!\n");
+        fprintf(stderr, "LTexture_loadFromFile Failed!\n");
+    }
+
+    if (!LTexture_loadFromFile(&gBackgroundTexture, "resources/fadein.png")) {
+        success = false;
+        fprintf(stderr, "LTexture_loadFromFile Failed!\n");
     }
 
     return success;
 }
 
 void closer() {
-    destroyLTexture(&gTexture);
-    destroyLTexture(&gTextureBackground);
+    LTexture_free(&gModulatedTexture);
+    LTexture_free(&gBackgroundTexture);
     SDL_DestroyRenderer(gRenderer);
     SDL_DestroyWindow(gWindow);
 
@@ -77,82 +67,11 @@ void closer() {
     SDL_Quit();
 }
 
-SDL_Texture* loadTexture(const char* path) {
-    SDL_Texture* newTexture = NULL;
-    SDL_Surface* loadSurface = IMG_Load(path);
-
-    if (loadSurface == NULL)
-        fprintf(stderr, "Unable to load image %s! SDL_Image Error: %s", path, IMG_GetError());
-    else {
-        if ((newTexture = SDL_CreateTextureFromSurface(gRenderer, loadSurface)) == NULL)
-            fprintf(stderr, "Unable to create texture from %s! SDL Error: %s", path, SDL_GetError());
-
-        SDL_FreeSurface(loadSurface);
-    }
-
-    return newTexture;
-}
-
-bool loadLTextureFromFile(LTexture* texture, const char* path) {
-    SDL_Texture* newTexture = NULL;
-    SDL_Surface* loadedSurface = IMG_Load(path);
-
-    if (loadedSurface == NULL) {
-        fprintf(stderr, "Unable to load image %s, SDL_Image Error: %s\n", path, IMG_GetError());
-        return false;
-    }
-
-    SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 255, 255));
-    newTexture = SDL_CreateTextureFromSurface(gRenderer, loadedSurface);
-
-    if (newTexture == NULL) {
-        fprintf(stderr, "Unable to create texture from %s! SDL Error: %s\n", path, IMG_GetError());
-        return false;
-    }
-
-    destroyLTexture(texture);
-
-    texture->mWidth = loadedSurface->w;
-    texture->mHeight = loadedSurface->h;
-
-    SDL_FreeSurface(loadedSurface);
-
-    texture->mTexture = newTexture;
-
-    return texture->mTexture != NULL;
-}
-
-void setLTextureColor(LTexture* texture, Uint8 red, Uint8 green, Uint8 blue) {
-    SDL_SetTextureColorMod(texture->mTexture, red, green, blue);
-}
-
-void renderLTexture(LTexture* texture, int x, int y, SDL_Rect* clip) {
-    SDL_Rect renderQuad = {x, y, texture->mWidth, texture->mHeight};
-
-    if (clip != NULL) {
-        renderQuad.w = clip->w;
-        renderQuad.h = clip->h;
-    }
-
-    SDL_RenderCopy(gRenderer, texture->mTexture, clip, &renderQuad);
-}
-
-void destroyLTexture(LTexture* texture) {
-    if (texture->mTexture != NULL) {
-        SDL_DestroyTexture(texture->mTexture);
-        texture->mTexture = NULL;
-        texture->mWidth = 0;
-        texture->mHeight = 0;
-    }
-}
-
 int main(int argc, char* argv[argc + 1]) {
     bool quit = false;
     SDL_Event e;
 
-    Uint8 r = 255;
-    Uint8 g = 255;
-    Uint8 b = 255;
+    Uint8 a = 255;
 
     if (!init()) {
         fprintf(stderr, "SDL failed to initialize: %s\n", SDL_GetError());
@@ -165,25 +84,18 @@ int main(int argc, char* argv[argc + 1]) {
             if (e.type == SDL_QUIT) {
                 quit = true;
             } else if (e.type == SDL_KEYDOWN) {
-                switch (e.key.keysym.sym) {
-                    case SDLK_q:
-                        r += 32;
-                        break;
-                    case SDLK_w:
-                        g += 32;
-                        break;
-                    case SDLK_e:
-                        b += 32;
-                        break;
-                    case SDLK_a:
-                        r -= 32;
-                        break;
-                    case SDLK_s:
-                        g -= 32;
-                        break;
-                    case SDLK_d:
-                        b -= 32;
-                        break;
+                if (e.key.keysym.sym == SDLK_w) {
+                    if (a + 32 > 255) {
+                        a = 255;
+                    } else {
+                        a += 32;
+                    }
+                } else if (e.key.keysym.sym == SDLK_s) {
+                    if (a - 32 < 0) {
+                        a = 0;
+                    } else {
+                        a -= 32;
+                    }
                 }
             }
         }
@@ -191,23 +103,10 @@ int main(int argc, char* argv[argc + 1]) {
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        setLTextureColor(&gSpriteSheetTexture, r, g, b);
+        LTexture_render(&gBackgroundTexture, 0, 0, NULL);
 
-        renderLTexture(&gSpriteSheetTexture,
-                       0, 0, &gSpriteClips[0]);
-
-        renderLTexture(&gSpriteSheetTexture,
-                       SCREEN_WIDTH - gSpriteClips[1].w, 0,
-                       &gSpriteClips[1]);
-
-        renderLTexture(&gSpriteSheetTexture,
-                       0, SCREEN_HEIGHT - gSpriteClips[2].h,
-                       &gSpriteClips[2]);
-
-        renderLTexture(&gSpriteSheetTexture,
-                       SCREEN_WIDTH - gSpriteClips[3].w,
-                       SCREEN_HEIGHT - gSpriteClips[3].h,
-                       &gSpriteClips[3]);
+        LTexture_setAlpha(&gModulatedTexture, a);
+        LTexture_render(&gModulatedTexture, 0, 0, NULL);
 
         SDL_RenderPresent(gRenderer);
     }

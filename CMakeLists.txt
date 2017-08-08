@@ -3,7 +3,10 @@ project(LazyFoo)
 
 set(CMAKE_C_STANDARD 11)
 
-set(SOURCE_FILES src/main.c)
+set(SOURCE_FILES
+        src/main.c
+        src/LTexture.c)
+
 add_executable(LazyFoo ${SOURCE_FILES})
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
