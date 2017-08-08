@@ -14,10 +14,13 @@
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
+const int WALKING_ANIMATION_FRAMES = 4;
+
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
-LTexture gModulatedTexture = {NULL, 0, 0};
-LTexture gBackgroundTexture = {NULL, 0, 0};
+
+SDL_Rect gSpriteClips[WALKING_ANIMATION_FRAMES];
+LTexture gSpriteSheetTexture = {NULL, 0, 0};
 
 bool init();
 

@@ -3,32 +3,36 @@
 bool init() {
     bool success = true;
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         success = false;
-    else {
-        if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1"))
+    } else {
+        if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1")) {
             fprintf(stderr, "SDL Hint???? : %s", SDL_GetError());
+        }
 
         if ((gWindow = SDL_CreateWindow("LazyFoo Tutorial",
                                         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                        SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN)) == NULL)
+                                        SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN)) == NULL) {
             success = false;
-        else {
-            if ((gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED)) == NULL)
+        } else {
+            if ((gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC))
+                == NULL) {
                 success = false;
-            else {
+            } else {
                 SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 
                 int imgFlags = IMG_INIT_PNG;
 
-                if (!(IMG_Init(imgFlags) & imgFlags))
+                if (!(IMG_Init(imgFlags) & imgFlags)) {
                     success = false;
+                }
             }
         }
     }
 
-    if (!success)
+    if (!success) {
         fprintf(stderr, "SLD failed to initialize: %s\n", SDL_GetError());
+    }
 
     return success;
 }
@@ -36,27 +40,39 @@ bool init() {
 bool loadMedia() {
     bool success = true;
 
-    gModulatedTexture.gRenderer = gRenderer;
-    gBackgroundTexture.gRenderer = gRenderer;
+    gSpriteSheetTexture.gRenderer = gRenderer;
 
-    if (LTexture_loadFromFile(&gModulatedTexture, "resources/fadeout.png")) {
-        LTexture_setBlendMode(&gModulatedTexture, SDL_BLENDMODE_BLEND);
+    if (LTexture_loadFromFile(&gSpriteSheetTexture, "resources/foo.png")) {
+        //Set sprite clips
+        gSpriteClips[0].x = 0;
+        gSpriteClips[0].y = 0;
+        gSpriteClips[0].w = 64;
+        gSpriteClips[0].h = 205;
+
+        gSpriteClips[1].x = 64;
+        gSpriteClips[1].y = 0;
+        gSpriteClips[1].w = 64;
+        gSpriteClips[1].h = 205;
+
+        gSpriteClips[2].x = 128;
+        gSpriteClips[2].y = 0;
+        gSpriteClips[2].w = 64;
+        gSpriteClips[2].h = 205;
+
+        gSpriteClips[3].x = 196;
+        gSpriteClips[3].y = 0;
+        gSpriteClips[3].w = 64;
+        gSpriteClips[3].h = 205;
     } else {
+        fprintf(stderr, "Failed to load walking animation texture!\n");
         success = false;
-        fprintf(stderr, "LTexture_loadFromFile Failed!\n");
-    }
-
-    if (!LTexture_loadFromFile(&gBackgroundTexture, "resources/fadein.png")) {
-        success = false;
-        fprintf(stderr, "LTexture_loadFromFile Failed!\n");
     }
 
     return success;
 }
 
 void closer() {
-    LTexture_free(&gModulatedTexture);
-    LTexture_free(&gBackgroundTexture);
+    LTexture_free(&gSpriteSheetTexture);
     SDL_DestroyRenderer(gRenderer);
     SDL_DestroyWindow(gWindow);
 
@@ -71,7 +87,7 @@ int main(int argc, char* argv[argc + 1]) {
     bool quit = false;
     SDL_Event e;
 
-    Uint8 a = 255;
+    int frame = 0;
 
     if (!init()) {
         fprintf(stderr, "SDL failed to initialize: %s\n", SDL_GetError());
@@ -83,32 +99,23 @@ int main(int argc, char* argv[argc + 1]) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
-            } else if (e.type == SDL_KEYDOWN) {
-                if (e.key.keysym.sym == SDLK_w) {
-                    if (a + 32 > 255) {
-                        a = 255;
-                    } else {
-                        a += 32;
-                    }
-                } else if (e.key.keysym.sym == SDLK_s) {
-                    if (a - 32 < 0) {
-                        a = 0;
-                    } else {
-                        a -= 32;
-                    }
-                }
             }
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        LTexture_render(&gBackgroundTexture, 0, 0, NULL);
-
-        LTexture_setAlpha(&gModulatedTexture, a);
-        LTexture_render(&gModulatedTexture, 0, 0, NULL);
+        SDL_Rect* currentClip = &gSpriteClips[frame / 4];
+        LTexture_render(&gSpriteSheetTexture,
+                        (SCREEN_WIDTH - currentClip->w) / 2,
+                        (SCREEN_HEIGHT - currentClip->h) / 2,
+                        currentClip);
 
         SDL_RenderPresent(gRenderer);
+
+        if (++frame / 4 >= WALKING_ANIMATION_FRAMES) {
+            frame = 0;
+        }
     }
 
     closer();
