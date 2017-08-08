@@ -36,7 +36,7 @@ bool init() {
 bool loadMedia() {
     bool success = true;
 
-    if (loadLTextureFromFile(&gSpriteSheetTexture, "dots.png")) {
+    if (loadLTextureFromFile(&gSpriteSheetTexture, "resources/dots.png")) {
         gSpriteClips[0].x = 0;
         gSpriteClips[0].y = 0;
         gSpriteClips[0].w = 100;
@@ -122,6 +122,10 @@ bool loadLTextureFromFile(LTexture* texture, const char* path) {
     return texture->mTexture != NULL;
 }
 
+void setLTextureColor(LTexture* texture, Uint8 red, Uint8 green, Uint8 blue) {
+    SDL_SetTextureColorMod(texture->mTexture, red, green, blue);
+}
+
 void renderLTexture(LTexture* texture, int x, int y, SDL_Rect* clip) {
     SDL_Rect renderQuad = {x, y, texture->mWidth, texture->mHeight};
 
@@ -146,18 +150,48 @@ int main(int argc, char* argv[argc + 1]) {
     bool quit = false;
     SDL_Event e;
 
-    if (!init())
+    Uint8 r = 255;
+    Uint8 g = 255;
+    Uint8 b = 255;
+
+    if (!init()) {
         fprintf(stderr, "SDL failed to initialize: %s\n", SDL_GetError());
-    else if (!loadMedia())
+    } else if (!loadMedia()) {
         fprintf(stderr, "SDL failed to load media: %s\n", SDL_GetError());
+    }
 
     while (!quit) {
-        while (SDL_PollEvent(&e) != 0)
-            if (e.type == SDL_QUIT)
+        while (SDL_PollEvent(&e) != 0) {
+            if (e.type == SDL_QUIT) {
                 quit = true;
+            } else if (e.type == SDL_KEYDOWN) {
+                switch (e.key.keysym.sym) {
+                    case SDLK_q:
+                        r += 32;
+                        break;
+                    case SDLK_w:
+                        g += 32;
+                        break;
+                    case SDLK_e:
+                        b += 32;
+                        break;
+                    case SDLK_a:
+                        r -= 32;
+                        break;
+                    case SDLK_s:
+                        g -= 32;
+                        break;
+                    case SDLK_d:
+                        b -= 32;
+                        break;
+                }
+            }
+        }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
+
+        setLTextureColor(&gSpriteSheetTexture, r, g, b);
 
         renderLTexture(&gSpriteSheetTexture,
                        0, 0, &gSpriteClips[0]);

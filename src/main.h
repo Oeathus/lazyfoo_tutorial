@@ -38,6 +38,8 @@ SDL_Texture* loadTexture(const char* path);
 
 bool loadLTextureFromFile(LTexture* texture, const char* path);
 
+void setLTextureColor(LTexture* texture, Uint8 red, Uint8 green, Uint8 blue);
+
 void renderLTexture(LTexture* texture, int x, int y, SDL_Rect* clip);
 
 void destroyLTexture(LTexture* texture);
