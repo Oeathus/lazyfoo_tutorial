@@ -88,6 +88,8 @@ int main(int argc, char* argv[argc + 1]) {
     SDL_Event e;
 
     int frame = 0;
+    double degrees = 0;
+    SDL_RendererFlip flipType = SDL_FLIP_NONE;
 
     if (!init()) {
         fprintf(stderr, "SDL failed to initialize: %s\n", SDL_GetError());
@@ -99,6 +101,24 @@ int main(int argc, char* argv[argc + 1]) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
+            } else if (e.type == SDL_KEYDOWN) {
+                switch (e.key.keysym.sym) {
+                    case SDLK_a:
+                        degrees -= 60;
+                        break;
+                    case SDLK_d:
+                        degrees += 60;
+                        break;
+                    case SDLK_q:
+                        flipType = SDL_FLIP_HORIZONTAL;
+                        break;
+                    case SDLK_w:
+                        flipType = SDL_FLIP_NONE;
+                        break;
+                    case SDLK_e:
+                        flipType = SDL_FLIP_VERTICAL;
+                        break;
+                }
             }
         }
 
@@ -109,7 +129,7 @@ int main(int argc, char* argv[argc + 1]) {
         LTexture_render(&gSpriteSheetTexture,
                         (SCREEN_WIDTH - currentClip->w) / 2,
                         (SCREEN_HEIGHT - currentClip->h) / 2,
-                        currentClip);
+                        currentClip, degrees, NULL, flipType);
 
         SDL_RenderPresent(gRenderer);
 

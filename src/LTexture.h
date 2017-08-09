@@ -24,7 +24,8 @@ void LTexture_setBlendMode(LTexture* texture, SDL_BlendMode blending);
 
 void LTexture_setAlpha(LTexture* texture, Uint8 alpha);
 
-void LTexture_render(LTexture* texture, int x, int y, SDL_Rect* clip);
+void LTexture_render(LTexture* texture, int x, int y, SDL_Rect* clip,
+                     double angle, SDL_Point* center, SDL_RendererFlip flip);
 
 void LTexture_free(LTexture* texture);
 
