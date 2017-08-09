@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdbool.h>
 
 typedef struct {
@@ -17,6 +18,8 @@ typedef struct {
 } LTexture;
 
 bool LTexture_loadFromFile(LTexture* texture, const char* path);
+
+bool LTexture_loadFromRenderedText(LTexture* texture, TTF_Font* font, char* textureText, SDL_Color textColor);
 
 void LTexture_setColor(LTexture* texture, Uint8 red, Uint8 green, Uint8 blue);
 

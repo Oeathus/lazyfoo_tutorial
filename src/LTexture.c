@@ -32,6 +32,28 @@ bool LTexture_loadFromFile(LTexture* texture, const char* path) {
     return texture->mTexture != NULL;
 }
 
+bool LTexture_loadFromRenderedText(LTexture* texture, TTF_Font* font, char* textureText, SDL_Color textColor) {
+    LTexture_free(texture);
+
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, textureText, textColor);
+    if (textSurface != NULL) {
+        texture->mTexture = SDL_CreateTextureFromSurface(texture->gRenderer, textSurface);
+
+        if (texture->mTexture != NULL) {
+            texture->mWidth = textSurface->w;
+            texture->mHeight = textSurface->h;
+        } else {
+            fprintf(stderr, "Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError());
+        }
+
+        SDL_FreeSurface(textSurface);
+    } else {
+        fprintf(stderr, "Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError());
+    }
+
+    return texture->mTexture != NULL;
+}
+
 void LTexture_setColor(LTexture* texture, Uint8 red, Uint8 green, Uint8 blue) {
     SDL_SetTextureColorMod(texture->mTexture, red, green, blue);
 }
@@ -63,5 +85,6 @@ void LTexture_free(LTexture* texture) {
         texture->mTexture = NULL;
         texture->mWidth = 0;
         texture->mHeight = 0;
+        texture->gRenderer = NULL;
     }
 }

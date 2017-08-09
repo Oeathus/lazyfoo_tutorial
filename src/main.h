@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdbool.h>
 #include "LTexture.h"
 
@@ -19,8 +20,8 @@ const int WALKING_ANIMATION_FRAMES = 4;
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
 
-SDL_Rect gSpriteClips[WALKING_ANIMATION_FRAMES];
-LTexture gSpriteSheetTexture = {NULL, 0, 0};
+TTF_Font* gFont = NULL;
+LTexture gTexture = {NULL, NULL, 0, 0};
 
 bool init();
 
