@@ -45,16 +45,24 @@ bool loadMedia() {
     bool success = true;
 
     gTexture.gRenderer = gRenderer;
-    if ((gFont = TTF_OpenFont("resources/Oeathus.ttf", 28)) != NULL) {
-        SDL_Color textColor = {0, 0, 0};
 
-        if (!LTexture_loadFromRenderedText(
-                &gTexture, gFont, "The quick brown fox jumps over the lazy dog", textColor)) {
-            fprintf(stderr, "Failed to render text texture!\n");
-            success = false;
+    //Load sprites
+    if (LTexture_loadFromFile(&gTexture, "resources/images/button.png")) {
+        //Set sprites
+        for (int i = 0; i < BUTTON_SPRITE_TOTAL; ++i) {
+            gSpriteClips[i].x = 0;
+            gSpriteClips[i].y = i * 200;
+            gSpriteClips[i].w = BUTTON_WIDTH;
+            gSpriteClips[i].h = BUTTON_HEIGHT;
         }
+
+        //Set buttons in corners
+        LButton_setPosition(&gButtons[0], 0, 0);
+        LButton_setPosition(&gButtons[1], SCREEN_WIDTH - BUTTON_WIDTH, 0);
+        LButton_setPosition(&gButtons[2], 0, SCREEN_HEIGHT - BUTTON_HEIGHT);
+        LButton_setPosition(&gButtons[3], SCREEN_WIDTH - BUTTON_WIDTH, SCREEN_HEIGHT - BUTTON_HEIGHT);
     } else {
-        fprintf(stderr, "Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
+        fprintf(stderr, "Failed to load button sprite texture!\n");
         success = false;
     }
 
@@ -96,16 +104,18 @@ int main(int argc, char* argv[argc + 1]) {
             if (e.type == SDL_QUIT) {
                 quit = true;
             }
+
+            for (int i = 0; i < TOTAL_BUTTONS; ++i) {
+                LButton_handleEvent(&(gButtons[i]), &e);
+            }
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        LTexture_render(&gTexture,
-                        (SCREEN_WIDTH - gTexture.mWidth) / 2,
-                        (SCREEN_HEIGHT - gTexture.mHeight) / 2,
-                        NULL, 0, NULL, SDL_FLIP_NONE
-        );
+        for (int i = 0; i < TOTAL_BUTTONS; ++i) {
+            LButton_render(&(gButtons[i]), &gTexture, &(gSpriteClips[gButtons[i].mCurrentSprite]));
+        }
 
         SDL_RenderPresent(gRenderer);
     }
