@@ -89,9 +89,9 @@ int main(int argc, char* argv[argc + 1]) {
     bool quit = false;
     SDL_Event e;
 
-    int frame = 0;
-    double degrees = 0;
-    SDL_RendererFlip flipType = SDL_FLIP_NONE;
+    LTexture* currentTexture = NULL;
+    double angle = 0;
+    SDL_RendererFlip flip = SDL_FLIP_NONE;
 
     if (!init()) {
         fprintf(stderr, "SDL failed to initialize: %s\n", SDL_GetError());
@@ -110,11 +110,29 @@ int main(int argc, char* argv[argc + 1]) {
             }
         }
 
+        const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
+        if (currentKeyStates[SDL_SCANCODE_UP]) {
+            flip = SDL_FLIP_VERTICAL;
+        } else if (currentKeyStates[SDL_SCANCODE_LEFT]) {
+            flip = SDL_FLIP_HORIZONTAL;
+        } else {
+            flip = SDL_FLIP_NONE;
+        }
+
+        if (currentKeyStates[SDL_SCANCODE_DOWN]) {
+            angle = 90.0;
+        } else if (currentKeyStates[SDL_SCANCODE_RIGHT]) {
+            angle = 270.0;
+        } else {
+            angle = 0.0;
+        }
+
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
         for (int i = 0; i < TOTAL_BUTTONS; ++i) {
-            LButton_render(&(gButtons[i]), &gTexture, &(gSpriteClips[gButtons[i].mCurrentSprite]));
+            LButton_render(&(gButtons[i]), &gTexture, &(gSpriteClips[gButtons[i].mCurrentSprite]),
+                           angle, NULL, flip);
         }
 
         SDL_RenderPresent(gRenderer);

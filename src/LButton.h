@@ -35,6 +35,7 @@ extern void LButton_setPosition(LButton* button, int x, int y);
 
 extern void LButton_handleEvent(LButton* button, SDL_Event* e);
 
-extern void LButton_render(LButton* button, LTexture* texture, SDL_Rect* clip);
+extern void LButton_render(LButton* button, LTexture* texture, SDL_Rect* clip,
+                           double angle, SDL_Point* center, SDL_RendererFlip flip);
 
 #endif //LAZYFOO_LBUTTON_H

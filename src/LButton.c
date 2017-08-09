@@ -45,7 +45,8 @@ void LButton_handleEvent(LButton* button, SDL_Event* e) {
     }
 }
 
-void LButton_render(LButton* button, LTexture* texture, SDL_Rect* clip) {
+void LButton_render(LButton* button, LTexture* texture, SDL_Rect* clip,
+                    double angle, SDL_Point* center, SDL_RendererFlip flip) {
     LTexture_render(texture, button->mPosition.x, button->mPosition.y,
-                    clip, 0, NULL, SDL_FLIP_NONE);
+                    clip, angle, center, flip);
 }
