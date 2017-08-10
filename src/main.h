@@ -23,9 +23,8 @@ SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
 
 TTF_Font* gFont = NULL;
-LTexture gTexture = {NULL, NULL, 0, 0};
-SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
-LButton gButtons[TOTAL_BUTTONS];
+LTexture gPromptTextTexture = {NULL, 0, 0};
+LTexture gTimeTextTexture = {NULL, 0, 0};
 
 Mix_Music* gMusic = NULL;
 

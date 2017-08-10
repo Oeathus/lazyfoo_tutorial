@@ -3,7 +3,7 @@
 //
 #include "LTexture.h"
 
-bool LTexture_loadFromFile(LTexture* texture, const char* path) {
+bool LTexture_loadFromFile(LTexture* texture, SDL_Renderer* renderer, const char* path) {
     SDL_Texture* newTexture = NULL;
     SDL_Surface* loadedSurface = IMG_Load(path);
 
@@ -13,7 +13,7 @@ bool LTexture_loadFromFile(LTexture* texture, const char* path) {
     }
 
     SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 255, 255));
-    newTexture = SDL_CreateTextureFromSurface(texture->gRenderer, loadedSurface);
+    newTexture = SDL_CreateTextureFromSurface(renderer, loadedSurface);
 
     if (newTexture == NULL) {
         fprintf(stderr, "Unable to create texture from %s! SDL Error: %s\n", path, IMG_GetError());
@@ -32,12 +32,13 @@ bool LTexture_loadFromFile(LTexture* texture, const char* path) {
     return texture->mTexture != NULL;
 }
 
-bool LTexture_loadFromRenderedText(LTexture* texture, TTF_Font* font, char* textureText, SDL_Color textColor) {
+bool LTexture_loadFromRenderedText(LTexture* texture, SDL_Renderer* renderer, TTF_Font* font, char* textureText,
+                                   SDL_Color textColor) {
     LTexture_free(texture);
 
     SDL_Surface* textSurface = TTF_RenderText_Solid(font, textureText, textColor);
     if (textSurface != NULL) {
-        texture->mTexture = SDL_CreateTextureFromSurface(texture->gRenderer, textSurface);
+        texture->mTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 
         if (texture->mTexture != NULL) {
             texture->mWidth = textSurface->w;
@@ -48,7 +49,7 @@ bool LTexture_loadFromRenderedText(LTexture* texture, TTF_Font* font, char* text
 
         SDL_FreeSurface(textSurface);
     } else {
-        fprintf(stderr, "Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError());
+        fprintf(stderr, "Unable to render text surface! SDL_ttf Error: %s\n", TTF_GetError());
     }
 
     return texture->mTexture != NULL;
@@ -66,8 +67,9 @@ void LTexture_setAlpha(LTexture* texture, Uint8 alpha) {
     SDL_SetTextureAlphaMod(texture->mTexture, alpha);
 }
 
-void LTexture_render(LTexture* texture, int x, int y, SDL_Rect* clip,
-                     double angle, SDL_Point* center, SDL_RendererFlip flip) {
+void LTexture_render(LTexture* texture, SDL_Renderer* renderer,
+                     int x, int y, SDL_Rect* clip, double angle, SDL_Point* center,
+                     SDL_RendererFlip flip) {
     SDL_Rect renderQuad = {x, y, texture->mWidth, texture->mHeight};
 
     if (clip != NULL) {
@@ -75,7 +77,7 @@ void LTexture_render(LTexture* texture, int x, int y, SDL_Rect* clip,
         renderQuad.h = clip->h;
     }
 
-    SDL_RenderCopyEx(texture->gRenderer, texture->mTexture, clip, &renderQuad,
+    SDL_RenderCopyEx(renderer, texture->mTexture, clip, &renderQuad,
                      angle, center, flip);
 }
 
@@ -85,6 +87,5 @@ void LTexture_free(LTexture* texture) {
         texture->mTexture = NULL;
         texture->mWidth = 0;
         texture->mHeight = 0;
-        texture->gRenderer = NULL;
     }
 }

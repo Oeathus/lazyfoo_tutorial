@@ -49,25 +49,16 @@ bool init() {
 bool loadMedia() {
     bool success = true;
 
-    gTexture.gRenderer = gRenderer;
-
-    //Load sprites
-    if (LTexture_loadFromFile(&gTexture, "resources/images/button.png")) {
-        //Set sprites
-        for (int i = 0; i < BUTTON_SPRITE_TOTAL; ++i) {
-            gSpriteClips[i].x = 0;
-            gSpriteClips[i].y = i * 200;
-            gSpriteClips[i].w = BUTTON_WIDTH;
-            gSpriteClips[i].h = BUTTON_HEIGHT;
+    gFont = TTF_OpenFont("resources/fonts/SourceCodePro/Regular.ttf", 24);
+    if (gFont != NULL) {
+        SDL_Color textColor = {0, 0, 0, 255};
+        if (!LTexture_loadFromRenderedText(&gPromptTextTexture, gRenderer, gFont,
+                                           "Press Enter to Reset Start Time.", textColor)) {
+            printf("Unable to render prompt texture!\n");
+            success = false;
         }
-
-        //Set buttons in corners
-        LButton_setPosition(&gButtons[0], 0, 0);
-        LButton_setPosition(&gButtons[1], SCREEN_WIDTH - BUTTON_WIDTH, 0);
-        LButton_setPosition(&gButtons[2], 0, SCREEN_HEIGHT - BUTTON_HEIGHT);
-        LButton_setPosition(&gButtons[3], SCREEN_WIDTH - BUTTON_WIDTH, SCREEN_HEIGHT - BUTTON_HEIGHT);
     } else {
-        fprintf(stderr, "Failed to load button sprite texture!\n");
+        printf("Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
         success = false;
     }
 
@@ -102,7 +93,8 @@ bool loadMedia() {
 }
 
 void closer() {
-    LTexture_free(&gTexture);
+    LTexture_free(&gPromptTextTexture);
+    LTexture_free(&gTimeTextTexture);
 
     TTF_CloseFont(gFont);
     gFont = NULL;
@@ -134,9 +126,9 @@ int main(int argc, char* argv[argc + 1]) {
     bool quit = false;
     SDL_Event e;
 
-    LTexture* currentTexture = NULL;
-    double angle = 0;
-    SDL_RendererFlip flip = SDL_FLIP_NONE;
+    SDL_Color textColor = {0, 0, 0, 255};
+    Uint32 startTime = 0;
+    char timeText[45] = {0};
 
     if (!init()) {
         fprintf(stderr, "SDL failed to initialize: %s\n", SDL_GetError());
@@ -176,38 +168,29 @@ int main(int argc, char* argv[argc + 1]) {
                     case SDLK_0:
                         Mix_HaltMusic();
                         break;
+                    case SDLK_RETURN:
+                        startTime = SDL_GetTicks();
+                        break;
+                    default:
+                        break;
                 }
             }
-
-            for (int i = 0; i < TOTAL_BUTTONS; ++i) {
-                LButton_handleEvent(&(gButtons[i]), &e);
-            }
         }
 
-        const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
-        if (currentKeyStates[SDL_SCANCODE_UP]) {
-            flip = SDL_FLIP_VERTICAL;
-        } else if (currentKeyStates[SDL_SCANCODE_LEFT]) {
-            flip = SDL_FLIP_HORIZONTAL;
-        } else {
-            flip = SDL_FLIP_NONE;
-        }
+        memset(timeText, 0, 45);
+        snprintf(timeText, 45, "Milliseconds since start time: %u", SDL_GetTicks() - startTime);
 
-        if (currentKeyStates[SDL_SCANCODE_DOWN]) {
-            angle = 90.0;
-        } else if (currentKeyStates[SDL_SCANCODE_RIGHT]) {
-            angle = 270.0;
-        } else {
-            angle = 0.0;
+        if (!LTexture_loadFromRenderedText(&gTimeTextTexture, gRenderer, gFont, timeText, textColor)) {
+            fprintf(stderr, "Unable to render time texture!\n");
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        for (int i = 0; i < TOTAL_BUTTONS; ++i) {
-            LButton_render(&(gButtons[i]), &gTexture, &(gSpriteClips[gButtons[i].mCurrentSprite]),
-                           angle, NULL, flip);
-        }
+        LTexture_render(&gPromptTextTexture, gRenderer, (SCREEN_WIDTH - gPromptTextTexture.mWidth) / 2, 0, NULL, 0, NULL,
+                        SDL_FLIP_NONE);
+        LTexture_render(&gTimeTextTexture, gRenderer, (SCREEN_WIDTH - gTimeTextTexture.mWidth) / 2,
+                        (SCREEN_HEIGHT - gTimeTextTexture.mHeight) / 2, NULL, 0, NULL, SDL_FLIP_NONE);
 
         SDL_RenderPresent(gRenderer);
     }
