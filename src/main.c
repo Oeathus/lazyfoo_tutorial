@@ -3,7 +3,7 @@
 bool init() {
     bool success = true;
 
-    if (SDL_Init(SDL_INIT_VIDEO) >= 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) >= 0) {
         if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1")) {
             fprintf(stderr, "SDL Hint???? : %s", SDL_GetError());
         }
@@ -22,6 +22,11 @@ bool init() {
                 }
 
                 if (TTF_Init() == -1) {
+                    success = false;
+                }
+
+                if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+                    fprintf(stderr, "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError());
                     success = false;
                 }
             } else {
@@ -66,6 +71,33 @@ bool loadMedia() {
         success = false;
     }
 
+    //Load music
+    gMusic = Mix_LoadMUS("resources/audio/beat.wav");
+    if (gMusic == NULL) {
+        printf("Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError());
+        success = false;
+    } //Load sound effects
+    gScratch = Mix_LoadWAV("resources/audio/scratch.wav");
+    if (gScratch == NULL) {
+        printf("Failed to load scratch sound effect! SDL_mixer Error: %s\n", Mix_GetError());
+        success = false;
+    }
+    gHigh = Mix_LoadWAV("resources/audio/high.wav");
+    if (gHigh == NULL) {
+        printf("Failed to load high sound effect! SDL_mixer Error: %s\n", Mix_GetError());
+        success = false;
+    }
+    gMedium = Mix_LoadWAV("resources/audio/medium.wav");
+    if (gMedium == NULL) {
+        printf("Failed to load medium sound effect! SDL_mixer Error: %s\n", Mix_GetError());
+        success = false;
+    }
+    gLow = Mix_LoadWAV("resources/audio/low.wav");
+    if (gLow == NULL) {
+        printf("Failed to load low sound effect! SDL_mixer Error: %s\n", Mix_GetError());
+        success = false;
+    }
+
     return success;
 }
 
@@ -75,11 +107,24 @@ void closer() {
     TTF_CloseFont(gFont);
     gFont = NULL;
 
+    Mix_FreeChunk(gScratch);
+    Mix_FreeChunk(gHigh);
+    Mix_FreeChunk(gMedium);
+    Mix_FreeChunk(gLow);
+    gScratch = NULL;
+    gHigh = NULL;
+    gMedium = NULL;
+    gLow = NULL;
+
+    Mix_FreeMusic(gMusic);
+    gMusic = NULL;
+
     SDL_DestroyRenderer(gRenderer);
     SDL_DestroyWindow(gWindow);
     gRenderer = NULL;
     gWindow = NULL;
 
+    Mix_Quit();
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
@@ -103,6 +148,35 @@ int main(int argc, char* argv[argc + 1]) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
+            } else if (e.type == SDL_KEYDOWN) {
+                switch (e.key.keysym.sym) {
+                    case SDLK_1:
+                        Mix_PlayChannel(-1, gHigh, 0);
+                        break;
+                    case SDLK_2:
+                        Mix_PlayChannel(-1, gMedium, 0);
+                        break;
+                    case SDLK_3:
+                        Mix_PlayChannel(-1, gLow, 0);
+                        break;
+                    case SDLK_4:
+                        Mix_PlayChannel(-1, gScratch, 0);
+                        break;
+                    case SDLK_9:
+                        if (Mix_PlayingMusic()) {
+                            if (Mix_PausedMusic()) {
+                                Mix_ResumeMusic();
+                            } else {
+                                Mix_PauseMusic();
+                            }
+                        } else {
+                            Mix_PlayMusic(gMusic, -1);
+                        }
+                        break;
+                    case SDLK_0:
+                        Mix_HaltMusic();
+                        break;
+                }
             }
 
             for (int i = 0; i < TOTAL_BUTTONS; ++i) {

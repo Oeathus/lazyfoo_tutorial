@@ -11,6 +11,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 
 #include "LTexture.h"
 #include "LButton.h"
@@ -25,6 +26,13 @@ TTF_Font* gFont = NULL;
 LTexture gTexture = {NULL, NULL, 0, 0};
 SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
 LButton gButtons[TOTAL_BUTTONS];
+
+Mix_Music* gMusic = NULL;
+
+Mix_Chunk* gScratch = NULL;
+Mix_Chunk* gHigh = NULL;
+Mix_Chunk* gMedium = NULL;
+Mix_Chunk* gLow = NULL;
 
 bool init();
 
