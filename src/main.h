@@ -15,6 +15,7 @@
 
 #include "LTexture.h"
 #include "LButton.h"
+#include "LTimer.h"
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480

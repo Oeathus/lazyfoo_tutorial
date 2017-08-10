@@ -10,7 +10,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <stdbool.h>
 
-typedef struct {
+typedef struct LTexture {
     SDL_Texture* mTexture;
     int mWidth;
     int mHeight;

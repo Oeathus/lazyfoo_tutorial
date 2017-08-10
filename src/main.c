@@ -49,11 +49,11 @@ bool init() {
 bool loadMedia() {
     bool success = true;
 
-    gFont = TTF_OpenFont("resources/fonts/SourceCodePro/Regular.ttf", 24);
+    gFont = TTF_OpenFont("resources/fonts/SourceCodePro/Regular.ttf", 16);
     if (gFont != NULL) {
         SDL_Color textColor = {0, 0, 0, 255};
         if (!LTexture_loadFromRenderedText(&gPromptTextTexture, gRenderer, gFont,
-                                           "Press Enter to Reset Start Time.", textColor)) {
+                                           "Press 's' to start/stop and 'p' to pause/unpause.", textColor)) {
             printf("Unable to render prompt texture!\n");
             success = false;
         }
@@ -127,7 +127,7 @@ int main(int argc, char* argv[argc + 1]) {
     SDL_Event e;
 
     SDL_Color textColor = {0, 0, 0, 255};
-    Uint32 startTime = 0;
+    LTimer timer = {0, 0, false, false};
     char timeText[45] = {0};
 
     if (!init()) {
@@ -168,8 +168,19 @@ int main(int argc, char* argv[argc + 1]) {
                     case SDLK_0:
                         Mix_HaltMusic();
                         break;
-                    case SDLK_RETURN:
-                        startTime = SDL_GetTicks();
+                    case SDLK_s:
+                        if (timer.mStarted) {
+                            LTimer_stop(&timer);
+                        } else {
+                            LTimer_start(&timer);
+                        }
+                        break;
+                    case SDLK_p:
+                        if (LTimer_isPaused(timer)) {
+                            LTimer_unpause(&timer);
+                        } else {
+                            LTimer_pause(&timer);
+                        }
                         break;
                     default:
                         break;
@@ -178,7 +189,8 @@ int main(int argc, char* argv[argc + 1]) {
         }
 
         memset(timeText, 0, 45);
-        snprintf(timeText, 45, "Milliseconds since start time: %u", SDL_GetTicks() - startTime);
+        snprintf(timeText, 45,
+                 "Milliseconds since start time: %8.2f", (LTimer_getTicks(&timer) / 1000.0));
 
         if (!LTexture_loadFromRenderedText(&gTimeTextTexture, gRenderer, gFont, timeText, textColor)) {
             fprintf(stderr, "Unable to render time texture!\n");
@@ -187,7 +199,8 @@ int main(int argc, char* argv[argc + 1]) {
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        LTexture_render(&gPromptTextTexture, gRenderer, (SCREEN_WIDTH - gPromptTextTexture.mWidth) / 2, 0, NULL, 0, NULL,
+        LTexture_render(&gPromptTextTexture, gRenderer, (SCREEN_WIDTH - gPromptTextTexture.mWidth) / 2, 0, NULL, 0,
+                        NULL,
                         SDL_FLIP_NONE);
         LTexture_render(&gTimeTextTexture, gRenderer, (SCREEN_WIDTH - gTimeTextTexture.mWidth) / 2,
                         (SCREEN_HEIGHT - gTimeTextTexture.mHeight) / 2, NULL, 0, NULL, SDL_FLIP_NONE);

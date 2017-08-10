@@ -26,7 +26,7 @@ typedef enum {
     BUTTON_SPRITE_TOTAL = 4
 } LButtonSprite;
 
-typedef struct {
+typedef struct LButton {
     SDL_Point mPosition;
     LButtonSprite mCurrentSprite;
 } LButton;

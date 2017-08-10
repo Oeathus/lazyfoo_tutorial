@@ -6,7 +6,8 @@ set(CMAKE_C_STANDARD 11)
 set(SOURCE_FILES
         src/LTexture.c
         src/LButton.c
-        src/main.c)
+        src/main.c
+        src/LTimer.c)
 
 add_executable(LazyFoo ${SOURCE_FILES})
 
