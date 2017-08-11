@@ -11,7 +11,8 @@ bool init() {
         if ((gWindow = SDL_CreateWindow("LazyFoo Tutorial",
                                         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                         SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN)) != NULL) {
-            if ((gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC))
+            if ((gRenderer = SDL_CreateRenderer(gWindow, -1,
+                                                SDL_RENDERER_ACCELERATED /*| SDL_RENDERER_PRESENTVSYNC*/))
                 != NULL) {
                 SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 
@@ -127,6 +128,7 @@ int main(int argc, char* argv[argc + 1]) {
     SDL_Event e;
 
     LTimer fpsTimer = {0, 0, false, false};
+    LTimer capTimer = {0, 0, false, false};
     int countedFrames = 0;
     LTimer_start(&fpsTimer);
 
@@ -141,6 +143,7 @@ int main(int argc, char* argv[argc + 1]) {
     }
 
     while (!quit) {
+        LTimer_start(&capTimer);
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
@@ -215,6 +218,11 @@ int main(int argc, char* argv[argc + 1]) {
 
         SDL_RenderPresent(gRenderer);
         ++countedFrames;
+
+        int frameTicks = LTimer_getTicks(&capTimer);
+        if (frameTicks < SCREEN_TICKS_PER_FRAME) {
+            SDL_Delay(SCREEN_TICKS_PER_FRAME - frameTicks);
+        }
     }
 
     closer();

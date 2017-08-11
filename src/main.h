@@ -19,6 +19,8 @@
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
+#define SCREEN_FPS 60
+#define SCREEN_TICKS_PER_FRAME (1000 / SCREEN_FPS)
 
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
