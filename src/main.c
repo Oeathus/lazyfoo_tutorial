@@ -126,6 +126,10 @@ int main(int argc, char* argv[argc + 1]) {
     bool quit = false;
     SDL_Event e;
 
+    LTimer fpsTimer = {0, 0, false, false};
+    int countedFrames = 0;
+    LTimer_start(&fpsTimer);
+
     SDL_Color textColor = {0, 0, 0, 255};
     LTimer timer = {0, 0, false, false};
     char timeText[45] = {0};
@@ -188,12 +192,16 @@ int main(int argc, char* argv[argc + 1]) {
             }
         }
 
+        float avgFPS = countedFrames / (LTimer_getTicks(&fpsTimer) / 1000.f);
+        if (avgFPS > 2000000) {
+            avgFPS = 0;
+        }
+
         memset(timeText, 0, 45);
-        snprintf(timeText, 45,
-                 "Milliseconds since start time: %8.2f", (LTimer_getTicks(&timer) / 1000.0));
+        snprintf(timeText, 45, "Average Frames Per Second: %8.2f", avgFPS);
 
         if (!LTexture_loadFromRenderedText(&gTimeTextTexture, gRenderer, gFont, timeText, textColor)) {
-            fprintf(stderr, "Unable to render time texture!\n");
+            fprintf(stderr, "Unable to render FPS texture!\n");
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
@@ -206,6 +214,7 @@ int main(int argc, char* argv[argc + 1]) {
                         (SCREEN_HEIGHT - gTimeTextTexture.mHeight) / 2, NULL, 0, NULL, SDL_FLIP_NONE);
 
         SDL_RenderPresent(gRenderer);
+        ++countedFrames;
     }
 
     closer();
