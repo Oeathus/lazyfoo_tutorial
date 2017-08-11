@@ -16,4 +16,6 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
 
+bool checkCollision(SDL_Rect a, SDL_Rect b);
+
 #endif //LAZYFOO_GLOBALS_H

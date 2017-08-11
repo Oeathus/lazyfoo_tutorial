@@ -122,6 +122,24 @@ void closer() {
     SDL_Quit();
 }
 
+bool checkCollision(SDL_Rect a, SDL_Rect b) {
+    int topA = a.y;
+    int leftA = a.x;
+    int bottomA = a.y + a.h;
+    int rightA = a.x + a.w;
+
+    int topB = b.y;
+    int leftB = b.x;
+    int bottomB = b.y + b.h;
+    int rightB = b.x + b.w;
+
+    if (topA >= bottomB) return false;
+    if (leftA >= rightB) return false;
+    if (bottomA <= topB) return false;
+    if (rightA <= leftB) return false;
+    return true;
+}
+
 int main(int argc, char* argv[argc + 1]) {
     bool quit = false;
     SDL_Event e;
@@ -132,7 +150,15 @@ int main(int argc, char* argv[argc + 1]) {
     LTimer_start(&fpsTimer);
     char fpsText[11] = {0};
 
-    Dot dot = {0, 0, 0, 0};
+    Dot dot;
+    Dot_init(&dot);
+
+    SDL_Rect wall = {
+            .x = 300,
+            .y = 40,
+            .w = 40,
+            .h = 400
+    };
 
     if (!init()) {
         fprintf(stderr, "SDL failed to initialize: %s\n", SDL_GetError());
@@ -180,8 +206,6 @@ int main(int argc, char* argv[argc + 1]) {
             Dot_handleEvent(&dot, &e);
         }
 
-        Dot_move(&dot);
-
         float avgFPS = countedFrames / (LTimer_getTicks(&fpsTimer) / 1000.f);
         if (avgFPS > 2000000) {
             avgFPS = 0;
@@ -194,8 +218,13 @@ int main(int argc, char* argv[argc + 1]) {
             fprintf(stderr, "Unable to render FPS texture!\n");
         }
 
+        Dot_move(&dot, &wall);
+
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
+
+        SDL_SetRenderDrawColor(gRenderer, 0x0, 0x0, 0x0, 0xFF);
+        SDL_RenderDrawRect(gRenderer, &wall);
 
         Dot_render(&dot, &gDotTexture, gRenderer,
                    NULL, 0, NULL, SDL_FLIP_NONE);
