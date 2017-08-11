@@ -5,11 +5,7 @@
 #ifndef LAZYFOO_LTIMER_H
 #define LAZYFOO_LTIMER_H
 
-#include <stdio.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-#include <stdbool.h>
+#include "globals.h"
 
 #define LTimer_isPaused(timer) (timer.mStarted && timer.mPaused)
 

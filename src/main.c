@@ -5,14 +5,14 @@ bool init() {
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) >= 0) {
         if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1")) {
-            fprintf(stderr, "SDL Hint???? : %s", SDL_GetError());
+            fprintf(stderr, "Warning: Linear texture filtering not enabled! : %s", SDL_GetError());
         }
 
         if ((gWindow = SDL_CreateWindow("LazyFoo Tutorial",
                                         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                         SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN)) != NULL) {
             if ((gRenderer = SDL_CreateRenderer(gWindow, -1,
-                                                SDL_RENDERER_ACCELERATED /*| SDL_RENDERER_PRESENTVSYNC*/))
+                                                SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC))
                 != NULL) {
                 SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 
@@ -50,16 +50,15 @@ bool init() {
 bool loadMedia() {
     bool success = true;
 
-    gFont = TTF_OpenFont("resources/fonts/SourceCodePro/Regular.ttf", 16);
-    if (gFont != NULL) {
-        SDL_Color textColor = {0, 0, 0, 255};
-        if (!LTexture_loadFromRenderedText(&gPromptTextTexture, gRenderer, gFont,
-                                           "Press 's' to start/stop and 'p' to pause/unpause.", textColor)) {
-            printf("Unable to render prompt texture!\n");
-            success = false;
-        }
-    } else {
+    gFont = TTF_OpenFont("resources/fonts/SourceCodePro/Regular.ttf", 12);
+    if (gFont == NULL) {
         printf("Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
+        success = false;
+    }
+
+    //Load dot texture
+    if (!LTexture_loadFromFile(&gDotTexture, gRenderer, "resources/images/dot.bmp")) {
+        fprintf(stderr, "Failed to load dot texture!\n");
         success = false;
     }
 
@@ -94,7 +93,7 @@ bool loadMedia() {
 }
 
 void closer() {
-    LTexture_free(&gPromptTextTexture);
+    LTexture_free(&gDotTexture);
     LTexture_free(&gTimeTextTexture);
 
     TTF_CloseFont(gFont);
@@ -127,14 +126,13 @@ int main(int argc, char* argv[argc + 1]) {
     bool quit = false;
     SDL_Event e;
 
+    SDL_Color textColor = {0, 0, 0, 255};
     LTimer fpsTimer = {0, 0, false, false};
-    LTimer capTimer = {0, 0, false, false};
     int countedFrames = 0;
     LTimer_start(&fpsTimer);
+    char fpsText[11] = {0};
 
-    SDL_Color textColor = {0, 0, 0, 255};
-    LTimer timer = {0, 0, false, false};
-    char timeText[45] = {0};
+    Dot dot = {0, 0, 0, 0};
 
     if (!init()) {
         fprintf(stderr, "SDL failed to initialize: %s\n", SDL_GetError());
@@ -143,7 +141,6 @@ int main(int argc, char* argv[argc + 1]) {
     }
 
     while (!quit) {
-        LTimer_start(&capTimer);
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
@@ -175,54 +172,40 @@ int main(int argc, char* argv[argc + 1]) {
                     case SDLK_0:
                         Mix_HaltMusic();
                         break;
-                    case SDLK_s:
-                        if (timer.mStarted) {
-                            LTimer_stop(&timer);
-                        } else {
-                            LTimer_start(&timer);
-                        }
-                        break;
-                    case SDLK_p:
-                        if (LTimer_isPaused(timer)) {
-                            LTimer_unpause(&timer);
-                        } else {
-                            LTimer_pause(&timer);
-                        }
-                        break;
                     default:
                         break;
                 }
             }
+
+            Dot_handleEvent(&dot, &e);
         }
+
+        Dot_move(&dot);
 
         float avgFPS = countedFrames / (LTimer_getTicks(&fpsTimer) / 1000.f);
         if (avgFPS > 2000000) {
             avgFPS = 0;
         }
 
-        memset(timeText, 0, 45);
-        snprintf(timeText, 45, "Average Frames Per Second: %8.2f", avgFPS);
+        memset(fpsText, 0, 11);
+        snprintf(fpsText, 11, "FPS: %2.2f", avgFPS);
 
-        if (!LTexture_loadFromRenderedText(&gTimeTextTexture, gRenderer, gFont, timeText, textColor)) {
+        if (!LTexture_loadFromRenderedText(&gTimeTextTexture, gRenderer, gFont, fpsText, textColor)) {
             fprintf(stderr, "Unable to render FPS texture!\n");
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        LTexture_render(&gPromptTextTexture, gRenderer, (SCREEN_WIDTH - gPromptTextTexture.mWidth) / 2, 0, NULL, 0,
-                        NULL,
-                        SDL_FLIP_NONE);
-        LTexture_render(&gTimeTextTexture, gRenderer, (SCREEN_WIDTH - gTimeTextTexture.mWidth) / 2,
-                        (SCREEN_HEIGHT - gTimeTextTexture.mHeight) / 2, NULL, 0, NULL, SDL_FLIP_NONE);
+        Dot_render(&dot, &gDotTexture, gRenderer,
+                   NULL, 0, NULL, SDL_FLIP_NONE);
+
+        LTexture_render(&gTimeTextTexture, gRenderer,
+                        0, SCREEN_HEIGHT - gTimeTextTexture.mHeight,
+                        NULL, 0, NULL, SDL_FLIP_NONE);
 
         SDL_RenderPresent(gRenderer);
         ++countedFrames;
-
-        int frameTicks = LTimer_getTicks(&capTimer);
-        if (frameTicks < SCREEN_TICKS_PER_FRAME) {
-            SDL_Delay(SCREEN_TICKS_PER_FRAME - frameTicks);
-        }
     }
 
     closer();

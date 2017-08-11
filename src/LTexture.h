@@ -4,11 +4,7 @@
 #ifndef LAZYFOO_LTEXTURE_H
 #define LAZYFOO_LTEXTURE_H
 
-#include <stdio.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-#include <stdbool.h>
+#include "globals.h"
 
 typedef struct LTexture {
     SDL_Texture* mTexture;
