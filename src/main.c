@@ -122,22 +122,35 @@ void closer() {
     SDL_Quit();
 }
 
-bool checkCollision(SDL_Rect a, SDL_Rect b) {
-    int topA = a.y;
-    int leftA = a.x;
-    int bottomA = a.y + a.h;
-    int rightA = a.x + a.w;
+bool checkCollision(MColliders* a, MColliders* b) {
+    if (a != NULL && b != NULL) {
+        int topA, leftA, bottomA, rightA;
+        int topB, leftB, bottomB, rightB;
 
-    int topB = b.y;
-    int leftB = b.x;
-    int bottomB = b.y + b.h;
-    int rightB = b.x + b.w;
+        for (int Abox = 0; Abox < a->count; ++Abox) {
+            topA = a->boxes[Abox].y;
+            leftA = a->boxes[Abox].x;
+            bottomA = a->boxes[Abox].y + a->boxes[Abox].h;
+            rightA = a->boxes[Abox].x + a->boxes[Abox].w;
 
-    if (topA >= bottomB) return false;
-    if (leftA >= rightB) return false;
-    if (bottomA <= topB) return false;
-    if (rightA <= leftB) return false;
-    return true;
+            for (int Bbox = 0; Bbox < b->count; ++Bbox) {
+                topB = b->boxes[Bbox].y;
+                leftB = b->boxes[Bbox].x;
+                bottomB = b->boxes[Bbox].y + b->boxes[Bbox].h;
+                rightB = b->boxes[Bbox].x + b->boxes[Bbox].w;
+
+                if (topA < bottomB
+                    && leftA < rightB
+                    && bottomA > topB
+                    && rightA > leftB) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    return false;
 }
 
 int main(int argc, char* argv[argc + 1]) {
@@ -150,15 +163,9 @@ int main(int argc, char* argv[argc + 1]) {
     LTimer_start(&fpsTimer);
     char fpsText[11] = {0};
 
-    Dot dot;
-    Dot_init(&dot);
-
-    SDL_Rect wall = {
-            .x = 300,
-            .y = 40,
-            .w = 40,
-            .h = 400
-    };
+    Dot dot1, dot2;
+    Dot_init(&dot1, 0, 0);
+    Dot_init(&dot2, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4);
 
     if (!init()) {
         fprintf(stderr, "SDL failed to initialize: %s\n", SDL_GetError());
@@ -203,7 +210,7 @@ int main(int argc, char* argv[argc + 1]) {
                 }
             }
 
-            Dot_handleEvent(&dot, &e);
+            Dot_handleEvent(&dot1, &e);
         }
 
         float avgFPS = countedFrames / (LTimer_getTicks(&fpsTimer) / 1000.f);
@@ -218,15 +225,14 @@ int main(int argc, char* argv[argc + 1]) {
             fprintf(stderr, "Unable to render FPS texture!\n");
         }
 
-        Dot_move(&dot, &wall);
+        Dot_move(&dot1, &(dot2.mColliders));
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        SDL_SetRenderDrawColor(gRenderer, 0x0, 0x0, 0x0, 0xFF);
-        SDL_RenderDrawRect(gRenderer, &wall);
-
-        Dot_render(&dot, &gDotTexture, gRenderer,
+        Dot_render(&dot2, &gDotTexture, gRenderer,
+                   NULL, 0, NULL, SDL_FLIP_NONE);
+        Dot_render(&dot1, &gDotTexture, gRenderer,
                    NULL, 0, NULL, SDL_FLIP_NONE);
 
         LTexture_render(&gTimeTextTexture, gRenderer,
@@ -237,6 +243,8 @@ int main(int argc, char* argv[argc + 1]) {
         ++countedFrames;
     }
 
+    Dot_free(&dot1);
+    Dot_free(&dot2);
     closer();
     return EXIT_SUCCESS;
 }

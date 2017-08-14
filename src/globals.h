@@ -16,6 +16,11 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
 
-bool checkCollision(SDL_Rect a, SDL_Rect b);
+typedef struct MColliders {
+    SDL_Rect* boxes;
+    size_t count;
+} MColliders;
+
+bool checkCollision(MColliders* a, MColliders* b);
 
 #endif //LAZYFOO_GLOBALS_H
