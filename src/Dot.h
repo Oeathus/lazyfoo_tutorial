@@ -17,14 +17,14 @@ typedef struct Dot {
     int mVelX;
     int mPosY;
     int mVelY;
-    MColliders mColliders;
+    Circle mCollider;
 } Dot;
 
 extern void Dot_init(Dot* dot, int x, int y);
 
 extern void Dot_handleEvent(Dot* dot, SDL_Event* e);
 
-extern void Dot_move(Dot* dot, MColliders* otherColliders);
+extern void Dot_move(Dot* dot, SDL_Rect* square, Circle* circle);
 
 extern void Dot_render(Dot* dot, LTexture* texture, SDL_Renderer* renderer, SDL_Rect* clip, double angle,
                        SDL_Point* center, SDL_RendererFlip flip);

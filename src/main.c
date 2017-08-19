@@ -122,7 +122,7 @@ void closer() {
     SDL_Quit();
 }
 
-bool checkCollision(MColliders* a, MColliders* b) {
+bool checkCollisionMC(MColliders* a, MColliders* b) {
     if (a != NULL && b != NULL) {
         int topA, leftA, bottomA, rightA;
         int topB, leftB, bottomB, rightB;
@@ -153,6 +153,50 @@ bool checkCollision(MColliders* a, MColliders* b) {
     return false;
 }
 
+bool checkCollisionCC(Circle* a, Circle* b) {
+    int totalRadiusSquared = a->r + b->r;
+    totalRadiusSquared = totalRadiusSquared * totalRadiusSquared;
+
+    if (distanceSquared(a->x, a->y, b->x, b->y) < totalRadiusSquared) {
+        return true;
+    }
+
+    return false;
+}
+
+bool checkCollisionCR(Circle* a, SDL_Rect* b) {
+    int cX, cY;
+
+    if (a->x < b->x) {
+        cX = b->x;
+    } else if (a->x > b->x + b->w) {
+        cX = b->x + b->w;
+    } else {
+        cX = a->x;
+    }
+
+    if (a->y < b->y) {
+        cY = b->y;
+    } else if (a->y > b->y + b->h) {
+        cY = b->y + b->h;
+    } else {
+        cY = a->y;
+    }
+
+    if (distanceSquared(a->x, a->y, cX, cY) < a->r * a->r) {
+        return true;
+    }
+
+    return false;
+}
+
+double distanceSquared(int x1, int y1, int x2, int y2) {
+    int deltaX = x2 - x1;
+    int deltaY = y2 - y1;
+
+    return deltaX * deltaX + deltaY * deltaY;
+}
+
 int main(int argc, char* argv[argc + 1]) {
     bool quit = false;
     SDL_Event e;
@@ -164,8 +208,14 @@ int main(int argc, char* argv[argc + 1]) {
     char fpsText[11] = {0};
 
     Dot dot1, dot2;
-    Dot_init(&dot1, 0, 0);
+    Dot_init(&dot1, DOT_WIDTH / 2, DOT_HEIGHT / 2);
     Dot_init(&dot2, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4);
+
+    SDL_Rect wall;
+    wall.x = 300;
+    wall.y = 40;
+    wall.w = 40;
+    wall.h = 400;
 
     if (!init()) {
         fprintf(stderr, "SDL failed to initialize: %s\n", SDL_GetError());
@@ -225,10 +275,13 @@ int main(int argc, char* argv[argc + 1]) {
             fprintf(stderr, "Unable to render FPS texture!\n");
         }
 
-        Dot_move(&dot1, &(dot2.mColliders));
+        Dot_move(&dot1, &wall, &(dot2.mCollider));
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
+
+        SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF);
+        SDL_RenderDrawRect(gRenderer, &wall);
 
         Dot_render(&dot2, &gDotTexture, gRenderer,
                    NULL, 0, NULL, SDL_FLIP_NONE);
