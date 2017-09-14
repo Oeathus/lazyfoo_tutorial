@@ -62,6 +62,12 @@ bool loadMedia() {
         success = false;
     }
 
+    //Load BG texture
+    if (!LTexture_loadFromFile(&gBGTexture, gRenderer, "resources/images/bg.png")) {
+        fprintf(stderr, "Failed to load BG texture!\n");
+        success = false;
+    }
+
     //Load music
     gMusic = Mix_LoadMUS("resources/audio/beat.wav");
     if (gMusic == NULL) {
@@ -94,6 +100,7 @@ bool loadMedia() {
 
 void closer() {
     LTexture_free(&gDotTexture);
+    LTexture_free(&gBGTexture);
     LTexture_free(&gTimeTextTexture);
 
     TTF_CloseFont(gFont);
@@ -122,81 +129,6 @@ void closer() {
     SDL_Quit();
 }
 
-bool checkCollisionMC(MColliders* a, MColliders* b) {
-    if (a != NULL && b != NULL) {
-        int topA, leftA, bottomA, rightA;
-        int topB, leftB, bottomB, rightB;
-
-        for (int Abox = 0; Abox < a->count; ++Abox) {
-            topA = a->boxes[Abox].y;
-            leftA = a->boxes[Abox].x;
-            bottomA = a->boxes[Abox].y + a->boxes[Abox].h;
-            rightA = a->boxes[Abox].x + a->boxes[Abox].w;
-
-            for (int Bbox = 0; Bbox < b->count; ++Bbox) {
-                topB = b->boxes[Bbox].y;
-                leftB = b->boxes[Bbox].x;
-                bottomB = b->boxes[Bbox].y + b->boxes[Bbox].h;
-                rightB = b->boxes[Bbox].x + b->boxes[Bbox].w;
-
-                if (topA < bottomB
-                    && leftA < rightB
-                    && bottomA > topB
-                    && rightA > leftB) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-    return false;
-}
-
-bool checkCollisionCC(Circle* a, Circle* b) {
-    int totalRadiusSquared = a->r + b->r;
-    totalRadiusSquared = totalRadiusSquared * totalRadiusSquared;
-
-    if (distanceSquared(a->x, a->y, b->x, b->y) < totalRadiusSquared) {
-        return true;
-    }
-
-    return false;
-}
-
-bool checkCollisionCR(Circle* a, SDL_Rect* b) {
-    int cX, cY;
-
-    if (a->x < b->x) {
-        cX = b->x;
-    } else if (a->x > b->x + b->w) {
-        cX = b->x + b->w;
-    } else {
-        cX = a->x;
-    }
-
-    if (a->y < b->y) {
-        cY = b->y;
-    } else if (a->y > b->y + b->h) {
-        cY = b->y + b->h;
-    } else {
-        cY = a->y;
-    }
-
-    if (distanceSquared(a->x, a->y, cX, cY) < a->r * a->r) {
-        return true;
-    }
-
-    return false;
-}
-
-double distanceSquared(int x1, int y1, int x2, int y2) {
-    int deltaX = x2 - x1;
-    int deltaY = y2 - y1;
-
-    return deltaX * deltaX + deltaY * deltaY;
-}
-
 int main(int argc, char* argv[argc + 1]) {
     bool quit = false;
     SDL_Event e;
@@ -207,15 +139,11 @@ int main(int argc, char* argv[argc + 1]) {
     LTimer_start(&fpsTimer);
     char fpsText[11] = {0};
 
-    Dot dot1, dot2;
+    Dot dot1;
     Dot_init(&dot1, DOT_WIDTH / 2, DOT_HEIGHT / 2);
-    Dot_init(&dot2, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4);
 
-    SDL_Rect wall;
-    wall.x = 300;
-    wall.y = 40;
-    wall.w = 40;
-    wall.h = 400;
+    SDL_Rect camera = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_Point camPoint;
 
     if (!init()) {
         fprintf(stderr, "SDL failed to initialize: %s\n", SDL_GetError());
@@ -275,18 +203,34 @@ int main(int argc, char* argv[argc + 1]) {
             fprintf(stderr, "Unable to render FPS texture!\n");
         }
 
-        Dot_move(&dot1, &wall, &(dot2.mCollider));
+        Dot_move(&dot1, NULL, NULL);
+        camera.x = (dot1.mPosX + (DOT_WIDTH / 2)) - SCREEN_WIDTH / 2;
+        camera.y = (dot1.mPosY + (DOT_HEIGHT / 2)) - SCREEN_HEIGHT / 2;
+
+        if (camera.x < 0) {
+            camera.x = 0;
+        }
+        if (camera.y < 0) {
+            camera.y = 0;
+        }
+        if (camera.x > LEVEL_WIDTH - camera.w) {
+            camera.x = LEVEL_WIDTH - camera.w;
+        }
+        if (camera.y > LEVEL_HEIGHT - camera.h) {
+            camera.y = LEVEL_HEIGHT - camera.h;
+        }
+
+        camPoint.x = camera.x;
+        camPoint.y = camera.y;
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
         SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF);
-        SDL_RenderDrawRect(gRenderer, &wall);
 
-        Dot_render(&dot2, &gDotTexture, gRenderer,
-                   NULL, 0, NULL, SDL_FLIP_NONE);
-        Dot_render(&dot1, &gDotTexture, gRenderer,
-                   NULL, 0, NULL, SDL_FLIP_NONE);
+        LTexture_render(&gBGTexture, gRenderer, 0, 0, &camera, 0, NULL, SDL_FLIP_NONE);
+
+        Dot_render(&dot1, &gDotTexture, gRenderer, NULL, 0, NULL, SDL_FLIP_NONE, &camPoint);
 
         LTexture_render(&gTimeTextTexture, gRenderer,
                         0, SCREEN_HEIGHT - gTimeTextTexture.mHeight,
@@ -297,7 +241,6 @@ int main(int argc, char* argv[argc + 1]) {
     }
 
     Dot_free(&dot1);
-    Dot_free(&dot2);
     closer();
     return EXIT_SUCCESS;
 }

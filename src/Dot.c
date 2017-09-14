@@ -59,9 +59,7 @@ void Dot_move(Dot* dot, SDL_Rect* square, Circle* circle) {
 
     //If the dot collided or went too far to the left or right
     if ((dot->mPosX - dot->mCollider.r < 0)
-        || (dot->mPosX + dot->mCollider.r > SCREEN_WIDTH)
-        || checkCollisionCR(&(dot->mCollider), square)
-        || checkCollisionCC(&(dot->mCollider), circle)) {
+        || (dot->mPosX + dot->mCollider.r > LEVEL_WIDTH)) {
         //Move back
         dot->mPosX -= dot->mVelX;
         shiftColliders(dot);
@@ -73,19 +71,25 @@ void Dot_move(Dot* dot, SDL_Rect* square, Circle* circle) {
 
     //If the dot collided or went too far up or down
     if ((dot->mPosY - dot->mCollider.r < 0)
-        || (dot->mPosY + dot->mCollider.r > SCREEN_HEIGHT)
-        || checkCollisionCR(&(dot->mCollider), square)
-        || checkCollisionCC(&(dot->mCollider), circle)) {
+        || (dot->mPosY + dot->mCollider.r > LEVEL_HEIGHT)) {
         //Move back
         dot->mPosY -= dot->mVelY;
         shiftColliders(dot);
     }
 }
 
-void Dot_render(Dot* dot, LTexture* texture, SDL_Renderer* renderer, SDL_Rect* clip, double angle,
-                SDL_Point* center, SDL_RendererFlip flip) {
+void Dot_render(Dot* dot, LTexture* texture, SDL_Renderer* renderer, SDL_Rect* clip, double angle, SDL_Point* center,
+                SDL_RendererFlip flip, SDL_Point* cam) {
+    int x = (dot->mPosX - dot->mCollider.r);
+    int y = (dot->mPosY - dot->mCollider.r);
+
+    if (cam != NULL) {
+        x -= cam->x;
+        y -= cam->y;
+    }
+
     LTexture_render(texture, renderer,
-                    dot->mPosX - dot->mCollider.r, dot->mPosY - dot->mCollider.r,
+                    x, y,
                     clip, angle, center, flip);
 }
 

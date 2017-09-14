@@ -8,6 +8,9 @@
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
+#define LEVEL_WIDTH 1280
+#define LEVEL_HEIGHT 960
+
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -21,18 +24,5 @@ typedef struct Circle {
     int y;
     int r;
 } Circle;
-
-typedef struct MColliders {
-    SDL_Rect* boxes;
-    size_t count;
-} MColliders;
-
-bool checkCollisionMC(MColliders* a, MColliders* b);
-
-bool checkCollisionCC(Circle* a, Circle* b);
-
-bool checkCollisionCR(Circle* a, SDL_Rect* b);
-
-double distanceSquared(int x1, int y1, int x2, int y2);
 
 #endif //LAZYFOO_GLOBALS_H

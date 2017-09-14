@@ -4,10 +4,15 @@ project(LazyFoo)
 set(CMAKE_C_STANDARD 11)
 
 set(SOURCE_FILES
+        src/globals.h
+        src/LTexture.h
         src/LTexture.c
+        src/LButton.h
         src/LButton.c
         src/LTimer.c
+        src/Dot.h
         src/Dot.c
+        src/main.h
         src/main.c)
 
 add_executable(LazyFoo ${SOURCE_FILES})

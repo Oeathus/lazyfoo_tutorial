@@ -16,6 +16,7 @@ SDL_Renderer* gRenderer = NULL;
 
 TTF_Font* gFont = NULL;
 LTexture gDotTexture = {NULL, 0, 0};
+LTexture gBGTexture = {NULL, 0, 0};
 LTexture gTimeTextTexture = {NULL, 0, 0};
 
 Mix_Music* gMusic = NULL;

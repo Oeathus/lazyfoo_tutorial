@@ -26,8 +26,9 @@ extern void Dot_handleEvent(Dot* dot, SDL_Event* e);
 
 extern void Dot_move(Dot* dot, SDL_Rect* square, Circle* circle);
 
-extern void Dot_render(Dot* dot, LTexture* texture, SDL_Renderer* renderer, SDL_Rect* clip, double angle,
-                       SDL_Point* center, SDL_RendererFlip flip);
+extern void
+Dot_render(Dot* dot, LTexture* texture, SDL_Renderer* renderer, SDL_Rect* clip, double angle, SDL_Point* center,
+           SDL_RendererFlip flip, SDL_Point* cam);
 
 extern void Dot_free(Dot* dot);
 
